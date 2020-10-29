@@ -14,8 +14,6 @@ spec:
   registryhost: localhost
   registryport: 5000
   jobvariablenames:
-    - import_topic
     - import_key
   jobvariablevalues:
-    -
     - out-topic
