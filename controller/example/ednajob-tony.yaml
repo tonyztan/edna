@@ -1,0 +1,21 @@
+apiVersion: edna.graitdm.edu/v1
+kind: EdnaJob
+metadata:
+  name: job2
+spec:
+  import_key:
+  export_key: out-topic
+  jobname: sink-job
+  applicationname: kafkasimple
+  filename: SinkJob
+  jobcontext: ednaconf
+  jobtype: internal
+  jobimagetag: v1
+  registryhost: localhost
+  registryport: 5000
+  jobvariablenames:
+    - import_topic
+    - import_key
+  jobvariablevalues:
+    -
+    - out-topic
