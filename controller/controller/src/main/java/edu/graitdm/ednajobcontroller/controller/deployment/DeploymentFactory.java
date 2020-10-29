@@ -78,6 +78,8 @@ public class DeploymentFactory {
 
 //        String jobImage = ednaJob.getSpec().getJobimage();
 
+        System.out.println(registryHost + ":" + registryPort + "/" + applicationName + "-" + jobName + ":" + jobImageTag);
+
         Deployment deployment = new DeploymentBuilder()
             .withNewMetadata()
                 .withName(ednaJob.getMetadata().getName())
