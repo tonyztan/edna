@@ -70,8 +70,10 @@ public class DeploymentFactory {
         // Add the deployment with the following line:
         // client.apps().deployments().inNamespace(currentResource.getMetadata().getNamespace()).create(deployment)
 
-
-
+        String registryHost = ednaJob.getSpec().getRegistryhost();
+        String registryPort = ednaJob.getSpec().getRegistryport();
+        String jobImage = ednaJob.getSpec().getJobimage();
+        String jobImageTag = ednaJob.getSpec().getJobimagetag();
 
         Deployment deployment = new DeploymentBuilder()
             .withNewMetadata()
@@ -89,7 +91,8 @@ public class DeploymentFactory {
                     .withNewSpec()
                         .addNewContainer()
                             .withName(name)
-                            .withImage("localhost:5000/busybox")
+//                            .withImage("localhost:5000/busybox")
+                            .withImage(registryHost + ":" + registryPort + "/" + jobImage)
                             .withCommand("sleep","36000")
                         .endContainer()
                     .endSpec()
