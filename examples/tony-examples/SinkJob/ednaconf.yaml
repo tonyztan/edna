@@ -1,4 +1,4 @@
 variables:
-  import_key: None
+  import_key: none
   export_key: out-topic
   bootstrap_server: edna-cluster-kafka-bootstrap.kafka.svc.cluster.local

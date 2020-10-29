@@ -3,7 +3,7 @@ kind: EdnaJob
 metadata:
   name: job2
 spec:
-  import_key:
+  import_key: none
   export_key: out-topic
   jobname: sink-job
   applicationname: kafkasimple
