@@ -72,8 +72,11 @@ public class DeploymentFactory {
 
         String registryHost = ednaJob.getSpec().getRegistryhost();
         String registryPort = ednaJob.getSpec().getRegistryport();
-        String jobImage = ednaJob.getSpec().getJobimage();
+        String applicationName = ednaJob.getSpec().getApplicationname();
+        String jobName = ednaJob.getSpec().getJobname();
         String jobImageTag = ednaJob.getSpec().getJobimagetag();
+
+//        String jobImage = ednaJob.getSpec().getJobimage();
 
         Deployment deployment = new DeploymentBuilder()
             .withNewMetadata()
@@ -92,8 +95,8 @@ public class DeploymentFactory {
                         .addNewContainer()
                             .withName(name)
 //                            .withImage("localhost:5000/busybox")
-                            .withImage(registryHost + ":" + registryPort + "/" + jobImage)
-                            .withCommand("sleep","36000")
+                            .withImage(registryHost + ":" + registryPort + "/" + applicationName + "-" + jobName + ":" + jobImageTag)
+//                            .withCommand("sleep","36000")
                         .endContainer()
                     .endSpec()
                 .endTemplate()
