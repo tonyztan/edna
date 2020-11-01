@@ -21,13 +21,22 @@ public class DeploymentStore extends ConcurrentHashMap<Object, Deployment> {
         return values().stream()
                 .filter(e->e.getMetadata()
                             .getNamespace()
-                            .equals(ednaJob.getSpec().getApplicationname()))
+                            .equals(ednaJob.getSpec().getApplicationname())) // gets and matches the namespace
                 .collect(Collectors.toList())
                 .stream()
                 .filter(e->e.getMetadata()
                             .getLabels()
                             .getOrDefault(EJ_NAME_KEY, "")
-                            .equals(ednaJob.getMetadata().getName()))
+                            .equals(ednaJob.getMetadata().getName())) // gets and matches the job name
+                .collect(Collectors.toList());
+    }
+
+    public List<Deployment> getDeploymentsforNamespace(EdnaJob ednaJob){
+        // the first half of the above function, getting any deployments in that namespace
+        return values().stream()
+                .filter(e->e.getMetadata()
+                        .getNamespace()
+                        .equals(ednaJob.getSpec().getApplicationname()))
                 .collect(Collectors.toList());
     }
 }

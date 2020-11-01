@@ -8,8 +8,13 @@ import edu.graitdm.ednajobcontroller.controller.deployment.DeploymentStore;
 import edu.graitdm.ednajobcontroller.controller.ednajob.EdnaJobController;
 import edu.graitdm.ednajobcontroller.controller.ednajob.EdnaJobFactory;
 import edu.graitdm.ednajobcontroller.controller.ednajob.EdnaJobStore;
-import io.fabric8.kubernetes.client.*;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.IOException;
@@ -17,11 +22,6 @@ import java.util.Optional;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Main {
     private static final Lock lock = new ReentrantLock();

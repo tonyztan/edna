@@ -61,6 +61,15 @@ public class EdnaJobController extends GenericEventQueueConsumer<EdnaJob> {
                 LOGGER.info("MOD - DEPLOYMENT_CREATION -- {}", event.getResource().getMetadata().getName());
                 // TODO  So we need to update the add() method to create a deployment given the currentResource,
                 //  which is an applied EdnaJob
+//                deploymentStore.getDeploymentsforNamespace(currentResource);
+                // https://github.com/fabric8io/kubernetes-client
+                //TODO check whether exists, if namespace doesn't exist, programmatically create the namespace
+                //Namespace myns = client.namespaces().createNew()
+                //                   .withNewMetadata()
+                //                     .withName(“myns”)
+                //                     .addToLabels(“a”, “label”)
+                //                   .endMetadata()
+                //                   .done();
                 deploymentFactory.add(currentResource);
                 break;
             case DEPLOYMENT_DELETION:
@@ -87,6 +96,8 @@ public class EdnaJobController extends GenericEventQueueConsumer<EdnaJob> {
         deployments.forEach(target -> {
             deploymentFactory.delete(target);
         });
+        // TODO check if there is any more deployments left in namespace, if there is none, then delete the namespace
+        // Namespace myns = client.namespaces().withName(“myns”).delete();
     }
 
     public void start() throws IOException {
