@@ -78,6 +78,8 @@ public class DeploymentFactory {
 
 //        String jobImage = ednaJob.getSpec().getJobimage();
 
+//        ednaJob.getSpec().setJobimage(registryHost + ":" + registryPort + "/" + applicationName + "-" + jobName + ":" + jobImageTag);
+
         System.out.println(registryHost + ":" + registryPort + "/" + applicationName + "-" + jobName + ":" + jobImageTag);
 
         Deployment deployment = new DeploymentBuilder()
@@ -104,7 +106,7 @@ public class DeploymentFactory {
                 .endTemplate()
                 .withNewSelector()
                     .addToMatchLabels(EJ_APP_LABEL_KEY, EJ_APP_LABEL_VALUE)
-                    .addToMatchLabels(EJ_NAME_KEY, ednaJob.getSpec().getJobname())
+                    .addToMatchLabels(EJ_NAME_KEY, ednaJob.getMetadata().getName())
                 .endSelector()
             .endSpec()
         .build();
