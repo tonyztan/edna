@@ -17,7 +17,7 @@ public class DeploymentStore extends ConcurrentHashMap<Object, Deployment> {
     // TODO Make sure in DeploymentFactory.add(), we add a
     //  label with key-value pair <EJ_NAME_KEY, ednaJob.getMetadata().getName()> to
     //  the generated deployment, otherwise this will not work.
-    public List<Deployment> getDeploymentsforEdnaJob(EdnaJob ednaJob){
+    public List<Deployment> getDeploymentsForEdnaJob(EdnaJob ednaJob){
         return values().stream()
                 .filter(e->e.getMetadata()
                             .getNamespace()
@@ -33,6 +33,14 @@ public class DeploymentStore extends ConcurrentHashMap<Object, Deployment> {
 
     public List<Deployment> getDeploymentsforNamespace(EdnaJob ednaJob){
         // the first half of the above function, getting any deployments in that namespace
+        return values().stream()
+                .filter(e->e.getMetadata()
+                        .getNamespace()
+                        .equals(ednaJob.getSpec().getApplicationname()))
+                .collect(Collectors.toList());
+    }
+
+    public List<Deployment> getDeploymentsInNamespace(EdnaJob ednaJob){
         return values().stream()
                 .filter(e->e.getMetadata()
                         .getNamespace()

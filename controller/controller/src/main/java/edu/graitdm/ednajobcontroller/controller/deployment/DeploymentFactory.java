@@ -70,18 +70,12 @@ public class DeploymentFactory {
         // Add the deployment with the following line:
         // client.apps().deployments().inNamespace(currentResource.getMetadata().getNamespace()).create(deployment)
 
-        String registryHost = ednaJob.getSpec().getRegistryhost();
-        String registryPort = ednaJob.getSpec().getRegistryport();
-        String applicationName = ednaJob.getSpec().getApplicationname();
-        String jobName = ednaJob.getSpec().getJobname();
-        String jobImageTag = ednaJob.getSpec().getJobimagetag();
 
-//        String jobImage = ednaJob.getSpec().getJobimage();
-
-//        ednaJob.getSpec().setJobimage(registryHost + ":" + registryPort + "/" + applicationName + "-" + jobName + ":" + jobImageTag);
-
-        System.out.println(registryHost + ":" + registryPort + "/" + applicationName + "-" + jobName + ":" + jobImageTag);
-
+        String fullImageName = ednaJob.getSpec().getRegistryhost() + ":" + 
+                                        ednaJob.getSpec().getRegistryport() + "/" + 
+                                        ednaJob.getSpec().getApplicationname() + "-" + 
+                                        ednaJob.getSpec().getJobname() + ":" + 
+                                        ednaJob.getSpec().getJobimagetag();
         Deployment deployment = new DeploymentBuilder()
             .withNewMetadata()
                 .withName(ednaJob.getMetadata().getName())
@@ -98,23 +92,20 @@ public class DeploymentFactory {
                     .withNewSpec()
                         .addNewContainer()
                             .withName(name)
-//                            .withImage("localhost:5000/busybox")
-                            .withImage(registryHost + ":" + registryPort + "/" + applicationName + "-" + jobName + ":" + jobImageTag)
-//                            .withCommand("sleep","36000")
+                            .withImage(fullImageName)
                         .endContainer()
                     .endSpec()
                 .endTemplate()
                 .withNewSelector()
                     .addToMatchLabels(EJ_APP_LABEL_KEY, EJ_APP_LABEL_VALUE)
-                    .addToMatchLabels(EJ_NAME_KEY, ednaJob.getMetadata().getName())
+                    .addToMatchLabels(EJ_NAME_KEY, ednaJob.getMetadata().getName()) //TODO(Abhijit) fix this with more stringent controls
                 .endSelector()
             .endSpec()
         .build();
         LOGGER.info("Set up deployment");
         client.apps().deployments().inNamespace(ednaJob.getSpec().getApplicationname()).create(deployment);
-        LOGGER.info("Applied deployment");
+        LOGGER.info("Applied deployment for - {}", ednaJob.getMetadata().getName());
 
-        LOGGER.info("Added deployment for - {}", ednaJob.getMetadata().getName());
     }
 
 

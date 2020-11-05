@@ -2,8 +2,10 @@ package edu.graitdm.ednajobcontroller.controller.ednajob;
 
 import edu.graitdm.ednajobcontroller.controller.deployment.DeploymentFactory;
 import edu.graitdm.ednajobcontroller.controller.deployment.DeploymentStore;
+import edu.graitdm.ednajobcontroller.controller.docker.DockerFactory;
+import edu.graitdm.ednajobcontroller.controller.namespace.NamespaceFactory;
+import edu.graitdm.ednajobcontroller.controller.namespace.NamespaceStore;
 import edu.graitdm.ednajobcontroller.events.GenericEventQueueConsumer;
-import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.microbean.kubernetes.controller.AbstractEvent;
 import org.microbean.kubernetes.controller.Controller;
@@ -18,25 +20,33 @@ public class EdnaJobController extends GenericEventQueueConsumer<EdnaJob> {
     private final EdnaJobFactory ednaJobFactory;
     private final DeploymentFactory deploymentFactory;
     private final DeploymentStore deploymentStore;
+    private final NamespaceFactory namespaceFactory;
+    private final NamespaceStore namespaceStore;
+    private final DockerFactory dockerFactory;
+
     // TODO maybe add the docker store and factory here?
 
     private final Controller<EdnaJob> controller;
-    private final KubernetesClient client;
 
     public EdnaJobController(KubernetesClient client, EdnaJobStore ednaJobStore, EdnaJobFactory ednaJobFactory,
                              DeploymentFactory deploymentFactory, DeploymentStore deploymentStore,
+                             NamespaceFactory namespaceFactory, NamespaceStore namespaceStore,
+                             DockerFactory dockerFactory,
                              String ns){
         super(ednaJobStore);
         this.ednaJobFactory = ednaJobFactory;
         this.deploymentStore = deploymentStore;
         this.deploymentFactory = deploymentFactory;
+        this.namespaceFactory = namespaceFactory;
+        this.namespaceStore = namespaceStore;
+        this.dockerFactory = dockerFactory;
         var customResourceImpl = client.customResources(ednaJobFactory.getCustomResourceDefinition(),
         EdnaJob.class,
                 EdnaJobList.class,
                 EdnaJobDoneable.class).inNamespace(ns);
         this.controller = new Controller<>(
                 customResourceImpl, this);
-        this.client = client;
+
     }
 
 
@@ -53,6 +63,8 @@ public class EdnaJobController extends GenericEventQueueConsumer<EdnaJob> {
         var priorResource = event.getPriorResource();
         var currentResource = event.getResource();
 
+        // TODO (Abhijit) we need to check whether priorResource and curretnResource are the same and if so, we
+        // still need to continue updating stuff...
 
         // TODO This is where we do operations for each of our states in EEdnaJobState
         switch(currentResource.getSpec().getState()){
@@ -63,21 +75,15 @@ public class EdnaJobController extends GenericEventQueueConsumer<EdnaJob> {
                 LOGGER.info("MOD - DEPLOYMENT_CREATION -- {}", event.getResource().getMetadata().getName());
                 // TODO  So we need to update the add() method to create a deployment given the currentResource,
                 //  which is an applied EdnaJob
-                // deploymentStore.getDeploymentsforNamespace(currentResource);
-                // check whether exists, if namespace doesn't exist, programmatically create the namespace
-                // https://github.com/fabric8io/kubernetes-client
-                String namespace = event.getResource().getSpec().getApplicationname();
-                Namespace appns = client.namespaces().withName(namespace).get();
-                if (appns == null) {
-                    Namespace ns = client.namespaces().createNew()
-                            .withNewMetadata()
-                            .withName(namespace)
-                            .addToLabels("a", "label")
-                            .endMetadata()
-                            .done();
-                    deploymentFactory.add(currentResource);
-                    LOGGER.info("Create Namespace - {}", namespace);
+                LOGGER.info("MOD - Checking namespace -- {}", event.getResource().getSpec().getApplicationname());
+                if(!namespaceStore.namespaceExists(currentResource)){
+                    LOGGER.info("MOD - Namespace {} does not exist", event.getResource().getSpec().getApplicationname());
+                    namespaceFactory.add(currentResource);
                 }
+                LOGGER.info("MOD - Adding docker image for {}", event.getResource().getMetadata().getName());
+                dockerFactory.add(currentResource);
+                LOGGER.info("MOD - Adding deployment for {}", event.getResource().getMetadata().getName());
+                deploymentFactory.add(currentResource);
                 break;
             case DEPLOYMENT_DELETION:
                 //TODO (Abhijit) We will never get this state, because the ednajob's already deleted...so fix this
@@ -87,7 +93,11 @@ public class EdnaJobController extends GenericEventQueueConsumer<EdnaJob> {
                 // TODO (Abhijit) is this state every reached???
                 LOGGER.info("MOD - READY -- {}", event.getResource().getMetadata().getName());
                 break;
+
         }
+
+
+
     }
 
     @Override
@@ -95,17 +105,11 @@ public class EdnaJobController extends GenericEventQueueConsumer<EdnaJob> {
         LOGGER.info("DEL EdnaJob - {}", event.getResource().getMetadata().getName());
         ednaJobFactory.update(event.getResource(), EEdnaJobState.DEPLOYMENT_DELETION);
         // TODO (Abhijit) delete deployment here...and verify this works
-        var deployments = deploymentStore.getDeploymentsforEdnaJob(event.getResource());
+        var deployments = deploymentStore.getDeploymentsForEdnaJob(event.getResource());
         deployments.forEach(target -> {
             deploymentFactory.delete(target);
         });
-        // check if there are any more deployments left in namespace, if none left, then delete the namespace
-        String namespace = event.getResource().getSpec().getApplicationname();
-        Namespace appns = client.namespaces().withName(namespace).get();
-        if ((appns != null) && (client.pods().inNamespace(namespace).list().getItems().size() <= 1)) {
-            boolean nsdeleted = client.namespaces().withName(namespace).delete();
-            LOGGER.info("Delete Namespace - {}", namespace);
-        }
+        namespaceFactory.deleteIfEmpty(event.getResource());
     }
 
     public void start() throws IOException {
