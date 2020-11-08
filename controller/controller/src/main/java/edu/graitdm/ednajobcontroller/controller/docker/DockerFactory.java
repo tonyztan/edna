@@ -3,6 +3,7 @@ package edu.graitdm.ednajobcontroller.controller.docker;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.BuildImageResultCallback;
 import com.github.dockerjava.core.command.PushImageResultCallback;
+import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.hubspot.jinjava.Jinjava;
 import edu.graitdm.ednajobcontroller.configuration.BaseConfiguration;
@@ -12,6 +13,8 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +22,8 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+//import static org.graalvm.compiler.debug.DebugOptions.PrintGraphTarget.File;
 
 public class DockerFactory {
 
@@ -72,34 +77,74 @@ public class DockerFactory {
          * DONE -- at thisi point, control returns to EdnaJobController, which checks for namespace and creates deployment, etc...
          */
 
+//        * Extract docker context from the ednajob
+//        *      context is located at /homedir/ednajob.applicationname/ednajob.jobname
+//        *      homedir is set in the baseconfiguration (or passed as command line arg)
+//        *      basically it's the path where the jobs are, e.g. /local/path/to/repo/examples/
+
         // Get the docker context (will need to combine a bunch of strings and then convert to path); see above
-        Path context = null;
+        String pathString = configuration.getEdnaAppdir() +
+                "/" + ednaJob.getSpec().getApplicationname() +
+                "/" + ednaJob.getSpec().getJobname();
+
+        Path context = Paths.get(pathString);
 
         // Get the edna source path from the configuration.ednasourcepath...
         Path ednaSource = Paths.get(configuration.getEdnaSourcedir());
 
         // Build the jinja2 context from ednaJob; see https://github.com/HubSpot/jinjava.
         Map<String,String> jinjaContext = new HashMap<String, String>();
+        jinjaContext.put("template.filename", ednaJob.getSpec().getFilename());
+        jinjaContext.put("template.jobcontext", ednaJob.getSpec().getJobcontext());
+        jinjaContext.put("template.filedependencies", ednaJob.getSpec().getFiledependencies());
 
         // Extract the jinja2 tempate from the resources directory with Resources.toString (see see https://github.com/HubSpot/jinjava)
-        String template = null;
+        String template = "";
+        try {
+            template = Resources.toString(Resources.getResource("Dockerfile.jinja2"), Charsets.UTF_8);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         //Use jinja2 to create the Dockerfile; see https://github.com/HubSpot/jinjava.
         Jinjava jinjava = new Jinjava();
-        /* (rendering the dockerfile)
-        String renderedDockerfile = jinjava.render(template,jinjaContext);
-        */
-
-        //Save the renderedDockerfile to context/Dockerfile
-        // Generate a dockerignore (i.e. just copy is from the resources folder); NOTE -- do we even need a dockerignore anymore???
-        // Copy the edna source files
-        //      ednaSource/src --> context/src
-        //      ednaSource/setup.cfg --> context/setup.cfg
-        //      ednaSource/setup.py --> context/setup.py
+        // (rendering the dockerfile)
+        String renderedDockerfile = jinjava.render(template, jinjaContext);
 
         /*
         Files.copy(source, target, Options)  // https://docs.oracle.com/javase/tutorial/essential/io/copy.html
          */
+
+        String dockerignore = "# Ignore .git and .cache\n" +
+                ".git\n" +
+                ".cache\n" +
+                "\n" +
+                "# Ignore config yaml files and generated docker.sh file\n" +
+                "config.yaml\n" +
+                "deployment.yaml\n" +
+                "docker.sh";
+
+        try {
+            //Save the renderedDockerfile to context/Dockerfile
+            Files.writeString(context.resolve("Dockerfile"), renderedDockerfile, Charsets.UTF_8);
+
+            // Generate a dockerignore (i.e. just copy is from the resources folder); NOTE -- do we even need a dockerignore anymore???
+            Files.writeString(context.resolve(".dockerignore"), dockerignore, Charsets.UTF_8);
+
+            // Copy the edna source files
+            //      ednaSource/src --> context/src
+            //      ednaSource/setup.cfg --> context/setup.cfg
+            //      ednaSource/setup.py --> context/setup.py
+
+            File srcDir = new File(ednaSource.resolve("src").toUri());
+            File destDir = new File(context.resolve("src").toUri());
+            FileUtils.copyDirectory(srcDir, destDir);
+
+            Files.copy(ednaSource.resolve("setup.cfg"), context.resolve("setup.cfg"));
+            Files.copy(ednaSource.resolve("setup.py"), context.resolve("setup.py"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         // Get the image details
         String localImageName = ednaJob.getSpec().getApplicationname() + "-" +
@@ -111,48 +156,44 @@ public class DockerFactory {
                 ednaJob.getSpec().getJobname();
 
         // Build the image
-        /*
+
         String imageId = dockerClient.buildImageCmd()
-                .withDockerfilePath("/path/to/file")  // or use withDockerfile
+                .withDockerfilePath(context.resolve("Dockerfile").toString())  // or use withDockerfile
                 .withPull(true)
                 .withNoCache(true)
                 .withTags(Collections.singleton(localImageName))
                 .exec(new BuildImageResultCallback())
                 .awaitImageId();
         dockerClient.tagImageCmd(imageId, remoteImageRepository, ednaJob.getSpec().getJobimagetag());
-         */
 
         try {
-            /*
+
             dockerClient.pushImageCmd(remoteImageRepository)
                         .withTag(ednaJob.getSpec().getJobimagetag())
                         .exec(new PushImageResultCallback())
                         .awaitCompletion();
-             */
-            // get rid of this, by the way. This is here just so the program compiles, because the above snippet does
-            // throw this exception
-            throw new InterruptedException();
 
         } catch (InterruptedException e) {
             e.printStackTrace();
-            // TODO handle this somehow? if there is an error, shut down or DO NOT process this...
+            System.exit(1);
+            // handle this somehow? if there is an error, shut down or DO NOT process this...
             //  have to think about this.
         }
 
         // Delete the source files, dockerignore, and Dockerfile
         //https://www.baeldung.com/java-delete-directory
 
-        /*
-        FileUtils.deleteDirectory(context/src);
-        Files.delete(context/setup.cfg);
-        Files.delete(context/setup.py);
-        Files.delete(context/Dockerfile);
-        Files.delete(context/.dockerignore);
-         */
+        try {
+            File srcDir = new File(context.resolve("src").toUri());
+            FileUtils.deleteDirectory(srcDir);
 
-
-
-
+            Files.delete(context.resolve("setup.cfg"));
+            Files.delete(context.resolve("setup.py"));
+            Files.delete(context.resolve("Dockerfile"));
+            Files.delete(context.resolve(".dockerignore"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
     }
