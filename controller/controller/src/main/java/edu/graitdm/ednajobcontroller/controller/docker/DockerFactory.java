@@ -16,9 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -98,7 +96,7 @@ public class DockerFactory {
         jinjaContext.put("template.jobcontext", ednaJob.getSpec().getJobcontext());
         jinjaContext.put("template.filedependencies", ednaJob.getSpec().getFiledependencies());
 
-        // Extract the jinja2 tempate from the resources directory with Resources.toString (see see https://github.com/HubSpot/jinjava)
+        // Extract the jinja2 template from the resources directory with Resources.toString (see see https://github.com/HubSpot/jinjava)
         String template = "";
         try {
             template = Resources.toString(Resources.getResource("Dockerfile.jinja2"), Charsets.UTF_8);
@@ -126,7 +124,7 @@ public class DockerFactory {
 
         try {
             //Save the renderedDockerfile to context/Dockerfile
-            Files.writeString(context.resolve("Dockerfile"), renderedDockerfile, Charsets.UTF_8);
+            Files.writeString(context.resolve("Dockerfile"), renderedDockerfile, Charsets.UTF_8, StandardOpenOption.CREATE);
 
             // Generate a dockerignore (i.e. just copy is from the resources folder); NOTE -- do we even need a dockerignore anymore???
             Files.writeString(context.resolve(".dockerignore"), dockerignore, Charsets.UTF_8);
@@ -140,8 +138,8 @@ public class DockerFactory {
             File destDir = new File(context.resolve("src").toUri());
             FileUtils.copyDirectory(srcDir, destDir);
 
-            Files.copy(ednaSource.resolve("setup.cfg"), context.resolve("setup.cfg"));
-            Files.copy(ednaSource.resolve("setup.py"), context.resolve("setup.py"));
+            Files.copy(ednaSource.resolve("setup.cfg"), context.resolve("setup.cfg"), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(ednaSource.resolve("setup.py"), context.resolve("setup.py"), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -156,9 +154,9 @@ public class DockerFactory {
                 ednaJob.getSpec().getJobname();
 
         // Build the image
-
+        File Dockerfile = new File(context.resolve("Dockerfile").toString());
         String imageId = dockerClient.buildImageCmd()
-                .withDockerfilePath(context.resolve("Dockerfile").toString())  // or use withDockerfile
+                .withDockerfile(Dockerfile)
                 .withPull(true)
                 .withNoCache(true)
                 .withTags(Collections.singleton(localImageName))
