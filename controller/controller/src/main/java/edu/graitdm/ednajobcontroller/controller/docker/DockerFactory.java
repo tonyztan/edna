@@ -113,14 +113,14 @@ public class DockerFactory {
         Files.copy(source, target, Options)  // https://docs.oracle.com/javase/tutorial/essential/io/copy.html
          */
 
-        String dockerignore = "# Ignore .git and .cache\n" +
-                ".git\n" +
-                ".cache\n" +
-                "\n" +
-                "# Ignore config yaml files and generated docker.sh file\n" +
-                "config.yaml\n" +
-                "deployment.yaml\n" +
-                "docker.sh";
+//        String dockerignore = "# Ignore .git and .cache\n" +
+//                ".git\n" +
+//                ".cache\n" +
+//                "\n" +
+//                "# Ignore config yaml files and generated docker.sh file\n" +
+//                "config.yaml\n" +
+//                "deployment.yaml\n" +
+//                "docker.sh";
 
         try {
             //Save the renderedDockerfile to context/Dockerfile
