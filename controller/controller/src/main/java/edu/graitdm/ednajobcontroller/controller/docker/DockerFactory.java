@@ -159,13 +159,14 @@ public class DockerFactory {
         // Build the image
         File Dockerfile = new File(context.resolve("Dockerfile").toString());
         String imageId = dockerClient.buildImageCmd()
+                .withBaseDirectory(new File(configuration.getEdnaAppdir()))
                 .withDockerfile(Dockerfile)
                 .withPull(true)
                 .withNoCache(true)
                 .withTags(Collections.singleton(localImageName))
                 .exec(new BuildImageResultCallback())
                 .awaitImageId();
-        dockerClient.tagImageCmd(imageId, remoteImageRepository, ednaJob.getSpec().getJobimagetag());
+        dockerClient.tagImageCmd(imageId, remoteImageRepository, ednaJob.getSpec().getJobimagetag()).exec();
 
         try {
 
