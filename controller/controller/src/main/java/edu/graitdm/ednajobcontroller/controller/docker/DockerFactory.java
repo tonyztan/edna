@@ -85,6 +85,9 @@ public class DockerFactory {
                 "/" + ednaJob.getSpec().getApplicationname() +
                 "/" + ednaJob.getSpec().getJobname();
 
+        File newFolder = new File(pathString);
+        newFolder.mkdirs();
+
         Path context = Paths.get(pathString);
 
         // Get the edna source path from the configuration.ednasourcepath...
@@ -113,24 +116,24 @@ public class DockerFactory {
         Files.copy(source, target, Options)  // https://docs.oracle.com/javase/tutorial/essential/io/copy.html
          */
 
-//        String dockerignore = "# Ignore .git and .cache\n" +
-//                ".git\n" +
-//                ".cache\n" +
-//                "\n" +
-//                "# Ignore config yaml files and generated docker.sh file\n" +
-//                "config.yaml\n" +
-//                "deployment.yaml\n" +
-//                "docker.sh";
+        String dockerignore = "# Ignore .git and .cache\n" +
+                ".git\n" +
+                ".cache\n" +
+                "\n" +
+                "# Ignore config yaml files and generated docker.sh file\n" +
+                "config.yaml\n" +
+                "deployment.yaml\n" +
+                "docker.sh";
 
         try {
             //Save the renderedDockerfile to context/Dockerfile
             Files.writeString(context.resolve("Dockerfile"), renderedDockerfile, Charsets.UTF_8, StandardOpenOption.CREATE);
 
             // Generate a dockerignore (i.e. just copy is from the resources folder); NOTE -- do we even need a dockerignore anymore???
-            // Files.writeString(context.resolve(".dockerignore"), dockerignore, Charsets.UTF_8);
+            Files.writeString(context.resolve(".dockerignore"), dockerignore, Charsets.UTF_8);
 
-            Path srcDockerIgnore = Paths.get(Resources.getResource(".dockerignore").toString());
-            Files.copy(srcDockerIgnore, context.resolve(".dockerignore"), StandardCopyOption.REPLACE_EXISTING);
+//            Path srcDockerIgnore = Paths.get(Resources.getResource(".dockerignore").toString());
+//            Files.copy(srcDockerIgnore, context.resolve(".dockerignore"), StandardCopyOption.REPLACE_EXISTING);
 
             // Copy the edna source files
             //      ednaSource/src --> context/src
