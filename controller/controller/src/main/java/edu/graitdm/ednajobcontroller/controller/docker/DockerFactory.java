@@ -92,9 +92,9 @@ public class DockerFactory {
 
         // Build the jinja2 context from ednaJob; see https://github.com/HubSpot/jinjava.
         Map<String,String> jinjaContext = new HashMap<String, String>();
-        jinjaContext.put("template.filename", ednaJob.getSpec().getFilename());
-        jinjaContext.put("template.jobcontext", ednaJob.getSpec().getJobcontext());
-        jinjaContext.put("template.filedependencies", ednaJob.getSpec().getFiledependencies());
+        jinjaContext.put("filename", ednaJob.getSpec().getFilename());
+        jinjaContext.put("jobcontext", ednaJob.getSpec().getJobcontext());
+        jinjaContext.put("filedependencies", ednaJob.getSpec().getFiledependencies());
 
         // Extract the jinja2 template from the resources directory with Resources.toString (see see https://github.com/HubSpot/jinjava)
         String template = "";
@@ -127,7 +127,10 @@ public class DockerFactory {
             Files.writeString(context.resolve("Dockerfile"), renderedDockerfile, Charsets.UTF_8, StandardOpenOption.CREATE);
 
             // Generate a dockerignore (i.e. just copy is from the resources folder); NOTE -- do we even need a dockerignore anymore???
-            Files.writeString(context.resolve(".dockerignore"), dockerignore, Charsets.UTF_8);
+            // Files.writeString(context.resolve(".dockerignore"), dockerignore, Charsets.UTF_8);
+
+            Path srcDockerIgnore = Paths.get(Resources.getResource(".dockerignore").toString());
+            Files.copy(srcDockerIgnore, context.resolve(".dockerignore"), StandardCopyOption.REPLACE_EXISTING);
 
             // Copy the edna source files
             //      ednaSource/src --> context/src
