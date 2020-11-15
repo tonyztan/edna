@@ -5,8 +5,8 @@ metadata:
 spec:
   import_key: none
   export_key: out-topic
-  jobname: sink-job
-  applicationname: kafkasimple
+  jobname: SinkJob
+  applicationname: tony-examples
   filename: SinkJob
   jobcontext: ednaconf
   jobtype: internal
