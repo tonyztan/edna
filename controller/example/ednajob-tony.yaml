@@ -5,7 +5,7 @@ metadata:
 spec:
   import_key: none
   export_key: out-topic
-  jobname: SinkJob
+  jobname: sink-job
   applicationname: tony-examples
   filename: SinkJob
   jobcontext: ednaconf
