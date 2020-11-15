@@ -85,8 +85,8 @@ public class DockerFactory {
                 "/" + ednaJob.getSpec().getApplicationname() +
                 "/" + ednaJob.getSpec().getJobname();
 
-        File newFolder = new File(pathString);
-        newFolder.mkdirs();
+//        File newFolder = new File(pathString);
+//        newFolder.mkdirs();
 
         Path context = Paths.get(pathString);
 
@@ -160,9 +160,9 @@ public class DockerFactory {
                 ednaJob.getSpec().getJobname();
 
         // Build the image
-        File Dockerfile = new File(context.resolve("Dockerfile").toString());
+        File Dockerfile = context.resolve("Dockerfile").toFile();
         String imageId = dockerClient.buildImageCmd()
-                .withBaseDirectory(new File(configuration.getEdnaAppdir()))
+                .withBaseDirectory(context.toFile())
                 .withDockerfile(Dockerfile)
                 .withPull(true)
                 .withNoCache(true)
