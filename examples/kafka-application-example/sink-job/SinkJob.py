@@ -11,24 +11,24 @@ from edna.serializers.EmptySerializer import EmptyStringSerializer
 from edna.serializers.EmptySerializer import EmptyObjectSerializer
 
 def main():
-    list_of_inserts = ['Processed by Sink Job: ']
-
-    context2 = SimpleStreamingContext()
-
-    ingest2 = SimulatedIngest(serializer=EmptyStringSerializer, stream_list=list_of_inserts)
-
-    emit_serializer2 = KafkaStringSerializer()    # e.g. StringSerializer
-
-    process2 = BaseProcess()                     # e.g. BaseProcess
-    emit2 = KafkaEmit(emit_serializer2,
-        kafka_topic=context2.getVariable("export_key"),
-        bootstrap_server=context2.getVariable("bootstrap_server"))           # e.g. KafkaEmit
-
-    context2.addIngest(ingest=ingest2)        # Registers the ingest primitive
-    context2.addProcess(process=process2)     # Registers the process primitive
-    context2.addEmit(emit=emit2)              # Registers the emit primitive
-
-    context2.execute()   # Executes  the context
+    # list_of_inserts = ['Processed by Sink Job: ']
+    #
+    # context2 = SimpleStreamingContext()
+    # 
+    # ingest2 = SimulatedIngest(serializer=EmptyStringSerializer, stream_list=list_of_inserts)
+    #
+    # emit_serializer2 = KafkaStringSerializer()    # e.g. StringSerializer
+    #
+    # process2 = BaseProcess()                     # e.g. BaseProcess
+    # emit2 = KafkaEmit(emit_serializer2,
+    #     kafka_topic=context2.getVariable("export_key"),
+    #     bootstrap_server=context2.getVariable("bootstrap_server"))           # e.g. KafkaEmit
+    #
+    # context2.addIngest(ingest=ingest2)        # Registers the ingest primitive
+    # context2.addProcess(process=process2)     # Registers the process primitive
+    # context2.addEmit(emit=emit2)              # Registers the emit primitive
+    #
+    # context2.execute()   # Executes  the context
 
     context = SimpleStreamingContext()     # Choose an appropriate context, such as SimpleStreamingContext
 
