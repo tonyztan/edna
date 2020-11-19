@@ -1,0 +1,21 @@
+apiVersion: edna.graitdm.edu/v1
+kind: EdnaJob
+metadata:
+  name: job2
+spec:
+  import_key: in-topic
+  export_key: source-job-stream
+  jobname: source-job
+  applicationname: kafkasimple
+  filename: SourceJob
+  jobcontext: ednaconf
+  jobtype: internal
+  jobimagetag: latest
+  registryhost: localhost
+  registryport: 5000
+  jobvariablenames:
+    - import_key
+    - export_key
+  jobvariablevalues:
+    - in-topic
+    - source-job-stream
