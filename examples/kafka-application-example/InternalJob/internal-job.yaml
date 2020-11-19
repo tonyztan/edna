@@ -6,7 +6,7 @@ spec:
   import_key: source-job-stream
   export_key: job1-stream
   jobname: internal-job
-  applicationname: kafkasimple
+  applicationname: kafka-application-example
   filename: InternalJob
   jobcontext: ednaconf
   jobtype: internal

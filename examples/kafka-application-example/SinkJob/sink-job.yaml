@@ -6,7 +6,7 @@ spec:
   import_key: job1-stream
   export_key: out-topic
   jobname: sink-job
-  applicationname: kafkasimple
+  applicationname: kafka-application-example
   filename: SinkJob
   jobcontext: ednaconf
   jobtype: internal
