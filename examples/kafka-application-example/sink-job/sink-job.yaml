@@ -1,7 +1,7 @@
 apiVersion: edna.graitdm.edu/v1
 kind: EdnaJob
 metadata:
-  name: job2
+  name: sink-job
 spec:
   import_key: job1-stream
   export_key: out-topic
