@@ -6,6 +6,16 @@ from edna.serializers import KafkaStringSerializer
 from edna.serializers import StringSerializer
 
 
+class SourceJobProcess(BaseProcess):
+    process_name = "SourceJobProcess"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def process(self, message):
+        message = "Processed by Source Job: " + message
+        return [message]
+
 def main():
     context = SimpleStreamingContext()     # Choose an appropriate context, such as SimpleStreamingContext
     
@@ -15,7 +25,7 @@ def main():
     ingest = KafkaIngest(ingest_serializer, 
         kafka_topic=context.getVariable("import_key"),
         bootstrap_server=context.getVariable("bootstrap_server"))    # e.g. KafkaIngest
-    process = BaseProcess()                     # e.g. BaseProcess
+    process = SourceJobProcess()                     # e.g. BaseProcess
     emit = KafkaEmit(emit_serializer, 
         kafka_topic=context.getVariable("export_key"),
         bootstrap_server=context.getVariable("bootstrap_server"))           # e.g. KafkaEmit
