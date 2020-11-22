@@ -38,7 +38,7 @@ def main():
     ingest = KafkaIngest(ingest_serializer,
         kafka_topic=context.getVariable("import_key"),
         bootstrap_server=context.getVariable("bootstrap_server"))    # e.g. KafkaIngest
-    process = BaseProcess()                     # e.g. BaseProcess
+    process = SinkJobProcess()                     # e.g. BaseProcess
     emit = KafkaEmit(emit_serializer,
         kafka_topic=context.getVariable("export_key"),
         bootstrap_server=context.getVariable("bootstrap_server"))           # e.g. KafkaEmit
@@ -52,3 +52,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+class SinkJobProcess(BaseProcess):
+    def __init__(self, *args, **kwargs) -> BaseProcess:
+        super().__init__(*args, **kwargs)
+
+    def process(self, message):
+        message = "Processed by Sink Job: " + message
+        super().process(message)
