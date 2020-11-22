@@ -55,9 +55,10 @@ if __name__ == "__main__":
 
 
 class SinkJobProcess(BaseProcess):
+    process_name: str = "SinkJobProcess"
     def __init__(self, *args, **kwargs) -> BaseProcess:
         super().__init__(*args, **kwargs)
 
     def process(self, message):
         message = "Processed by Sink Job: " + message
-        super().process(message)
+        return super().process(message)
