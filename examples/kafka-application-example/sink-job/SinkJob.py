@@ -10,6 +10,17 @@ from edna.process.map import JsonToObject
 from edna.serializers.EmptySerializer import EmptyStringSerializer
 from edna.serializers.EmptySerializer import EmptyObjectSerializer
 
+
+class SinkJobProcess(BaseProcess):
+    process_name = "SinkJobProcess"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def process(self, message):
+        # message = "Processed by Sink Job: " + message
+        return [message]
+
 def main():
     # list_of_inserts = ['Processed by Sink Job: ']
     #
@@ -52,14 +63,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-class SinkJobProcess(BaseProcess):
-    process_name = "SinkJobProcess"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def process(self, message):
-        message = "Processed by Sink Job: " + message
-        return [message]
