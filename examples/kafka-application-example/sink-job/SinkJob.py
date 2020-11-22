@@ -18,7 +18,7 @@ class SinkJobProcess(BaseProcess):
         super().__init__(*args, **kwargs)
 
     def process(self, message):
-        # message = "Processed by Sink Job: " + message
+        message = "Processed by Sink Job: " + message
         return [message]
 
 def main():
